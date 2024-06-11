@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from "react";
+import React, {useEffect, useState, useCallback, useRef} from "react";
 import debounce from "lodash.debounce"; // if using lodash
 
 function Home() {
@@ -8,7 +8,7 @@ function Home() {
   const [error, setError] = useState(false);
   const [querySearch, setQuerySearch] = useState("");
   const [bookshelf, setBookshelf] = useState([]);
-
+  const debouncedFetchBooksRef = useRef(null);
   useEffect(() => {
     const savedBookshelf = JSON.parse(localStorage.getItem("bookshelf")) || [];
     setBookshelf(savedBookshelf);
@@ -52,15 +52,19 @@ function Home() {
   };
 
   // Debounce fetchBooks function
-  const debouncedFetchBooks = useCallback(
-    debounce((searchQuery) => fetchBooks(searchQuery), 500),
-    []
-  );
+  useEffect(() => {
+    debouncedFetchBooksRef.current = debounce(
+      (searchQuery) => fetchBooks(searchQuery),
+      500
+    );
+  }, []);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
     setQuery(value);
-    debouncedFetchBooks(value);
+    if (debouncedFetchBooksRef.current) {
+      debouncedFetchBooksRef.current(value);
+    }
   };
 
   return (
